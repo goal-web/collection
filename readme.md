@@ -1,3 +1,12 @@
+# Goal-web/collection
+
+## 安装 - install
+```bash
+go get github.com/goal-web/collection
+```
+
+## 使用
+```go
 package tests
 
 import (
@@ -126,3 +135,7 @@ func TestFilterArray(t *testing.T) {
 	assert.True(t, users.Where("money", "<=", 50).Length() == 1)
 
 }
+```
+
+[goal-web/collection](https://github.com/goal-web/collection)  
+qbhy0715@qq.com
