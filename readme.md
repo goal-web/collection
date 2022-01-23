@@ -33,7 +33,7 @@ func TestArray(t *testing.T) {
 		1, 2, 3, true, "字符串", "true",
 	})
 	fmt.Println(intCollection.ToFloat64Array())
-	assert.True(t, intCollection.Length() == 6)
+	assert.True(t, intCollection.Len() == 6)
 
 	// 第二个参数是数据索引
 	intCollection.Map(func(data, index int) {
@@ -100,7 +100,7 @@ func TestStructArray(t *testing.T) {
 			user.Money = 100
 		}
 		return user
-	}).Where("money", 100).Length() == 1)
+	}).Where("money", 100).Len() == 1)
 }
 
 func TestFilterArray(t *testing.T) {
@@ -116,23 +116,23 @@ func TestFilterArray(t *testing.T) {
 		return user.Money > 100
 	})
 
-	assert.True(t, richUsers.Length() == 1)
+	assert.True(t, richUsers.Len() == 1)
 	fmt.Println(richUsers.ToInterfaceArray())
 
 	poorUsers := users.Skip(func(user User) bool {
 		return user.Money > 100
 	})
 
-	assert.True(t, poorUsers.Length() == 1)
+	assert.True(t, poorUsers.Len() == 1)
 	fmt.Println(poorUsers.ToInterfaceArray())
 
 	qbhyUsers := users.Where("name", "qbhy")
 
-	assert.True(t, qbhyUsers.Length() == 1)
+	assert.True(t, qbhyUsers.Len() == 1)
 	fmt.Println(qbhyUsers.ToInterfaceArray())
 
-	assert.True(t, users.WhereLte("money", 50).Length() == 1)
-	assert.True(t, users.Where("money", "<=", 50).Length() == 1)
+	assert.True(t, users.WhereLte("money", 50).Len() == 1)
+	assert.True(t, users.Where("money", "<=", 50).Len() == 1)
 }
 
 // TestAggregateArray 聚合函数测试
