@@ -159,6 +159,43 @@ func TestAggregateArray(t *testing.T) {
 	assert.True(t, users.Count() == 3)
 }
 
+// TestSortArray 测试排序功能
+func TestSortArray(t *testing.T) {
+	users := collection.MustNew([]User{
+		{id: 1, Name: "qbhy", Money: 12},
+		{id: 2, Name: "goal", Money: 1},
+		{id: 2, Name: "goal", Money: 15},
+		{id: 2, Name: "goal99", Money: 99},
+		{id: 3, Name: "collection", Money: -5},
+		{id: 3, Name: "移动", Money: 10086},
+	})
+
+	fmt.Println(users.ToInterfaceArray())
+
+	// 暂不支持转成 contracts.Fields
+	usersOrderByMoneyDesc := users.Sort(func(user User, next User) bool {
+		return user.Money > next.Money
+	})
+	fmt.Println(usersOrderByMoneyDesc.ToInterfaceArray())
+	assert.True(t, usersOrderByMoneyDesc.Index(0).(User).Money == 10086)
+
+	usersOrderByMoneyAsc := users.Sort(func(user User, next User) bool {
+		return user.Money < next.Money
+	})
+	fmt.Println(usersOrderByMoneyAsc.ToInterfaceArray())
+	assert.True(t, usersOrderByMoneyAsc.Index(0).(User).Money == -5)
+
+	numbers := collection.MustNew([]interface{}{
+		8, 0, 1, 2, 0.6, 4, 5, 6, -0.2, 7, 9, 3, "10086",
+	})
+
+	sortedNumbers := numbers.Sort(func(i, j float64) bool {
+		return i > j
+	}).ToFloat64Array()
+
+	fmt.Println(sortedNumbers)
+	assert.True(t, sortedNumbers[0] == 10086)
+}
 ```
 
 [goal-web/collection](https://github.com/goal-web/collection)  

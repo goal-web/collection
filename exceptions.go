@@ -10,3 +10,8 @@ type Exception struct {
 type MapException struct {
 	exceptions.Exception
 }
+
+// SortException 排序参数异常
+type SortException struct {
+	exceptions.Exception
+}

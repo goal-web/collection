@@ -12,6 +12,7 @@ type array []interface{}
 type Collection struct {
 	array
 	mapData []contracts.Fields
+	sorter  func(i, j int) bool
 }
 
 func New(data interface{}) (*Collection, error) {
@@ -144,9 +145,6 @@ func (this *Collection) WhereIn(field string, arg interface{}) *Collection {
 }
 func (this *Collection) WhereNotIn(field string, arg interface{}) *Collection {
 	return this.Where(field, "not in", arg)
-}
-func (this *Collection) Length() int {
-	return len(this.array)
 }
 
 func (this *Collection) Index(index int) interface{} {
