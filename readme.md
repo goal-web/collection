@@ -133,8 +133,32 @@ func TestFilterArray(t *testing.T) {
 
 	assert.True(t, users.WhereLte("money", 50).Length() == 1)
 	assert.True(t, users.Where("money", "<=", 50).Length() == 1)
-
 }
+
+// TestAggregateArray 聚合函数测试
+func TestAggregateArray(t *testing.T) {
+
+	users := collection.MustNew([]User{
+		{id: 1, Name: "qbhy", Money: 10000000000000000},
+		{id: 2, Name: "goal", Money: 10000000000000000},
+		{id: 3, Name: "collection", Money: 0.645624123},
+	})
+
+	fmt.Println("Sum", users.Sum("money"))
+	fmt.Println("Avg", users.Avg("money"))
+	fmt.Println("Max", users.Max("money"))
+	fmt.Println("Min", users.Min("money"))
+	sum, _ := decimal.NewFromString("20000000000000000.645624123")
+	avg, _ := decimal.NewFromString("6666666666666666.8818747076666667")
+	max, _ := decimal.NewFromString("10000000000000000")
+	min, _ := decimal.NewFromString("0.645624123")
+	assert.True(t, users.Sum("money").Equal(sum))
+	assert.True(t, users.Avg("money").Equal(avg))
+	assert.True(t, users.Max("money").Equal(max))
+	assert.True(t, users.Min("money").Equal(min))
+	assert.True(t, users.Count() == 3)
+}
+
 ```
 
 [goal-web/collection](https://github.com/goal-web/collection)  
