@@ -149,10 +149,6 @@ func (this *Collection) Length() int {
 	return len(this.array)
 }
 
-func (this *Collection) Count() int {
-	return len(this.array)
-}
-
 func (this *Collection) Index(index int) interface{} {
 	if this.Count() > index {
 		return this.array[index]
