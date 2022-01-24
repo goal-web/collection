@@ -76,8 +76,6 @@ func TestStructArray(t *testing.T) {
 		{id: 2, Name: "goal"},
 	})
 
-	assert.Nil(t, users.Index(5))
-
 	users.Map(func(user User) {
 		fmt.Printf("user: id:%d Name:%s \n", user.id, user.Name)
 	})
@@ -102,7 +100,7 @@ func TestFilterArray(t *testing.T) {
 		{id: 2, Name: "goal", Money: 10},
 	})
 
-	fmt.Println("第一个数据", users.Index(0))
+	fmt.Println("第一个数据", users.ToInterfaceArray()[0])
 
 	richUsers := users.Filter(func(user User) bool {
 		return user.Money > 100
@@ -135,20 +133,33 @@ func TestAggregateArray(t *testing.T) {
 		{id: 1, Name: "qbhy", Money: 10000000000000000},
 		{id: 2, Name: "goal", Money: 10000000000000000},
 		{id: 3, Name: "collection", Money: 0.645624123},
-	})
+	}).(*collection.Collection)
 
-	fmt.Println("Sum", users.Sum("money"))
-	fmt.Println("Avg", users.Avg("money"))
-	fmt.Println("Max", users.Max("money"))
-	fmt.Println("Min", users.Min("money"))
+	// SafeSum、SafeAvg、SafeMax、SafeMin 等方法需要 *collection.Collection 类型
+	fmt.Println("Sum", users.SafeSum("money"))
+	fmt.Println("Avg", users.SafeAvg("money"))
+	fmt.Println("Max", users.SafeMax("money"))
+	fmt.Println("Min", users.SafeMin("money"))
 	sum, _ := decimal.NewFromString("20000000000000000.645624123")
 	avg, _ := decimal.NewFromString("6666666666666666.8818747076666667")
 	max, _ := decimal.NewFromString("10000000000000000")
 	min, _ := decimal.NewFromString("0.645624123")
-	assert.True(t, users.Sum("money").Equal(sum))
-	assert.True(t, users.Avg("money").Equal(avg))
-	assert.True(t, users.Max("money").Equal(max))
-	assert.True(t, users.Min("money").Equal(min))
+
+	assert.True(t, users.SafeSum("money").Equal(sum))
+	assert.True(t, users.SafeAvg("money").Equal(avg))
+	assert.True(t, users.SafeMax("money").Equal(max))
+	assert.True(t, users.SafeMin("money").Equal(min))
+
+	users = collection.MustNew([]User{
+		{id: 1, Name: "qbhy", Money: 1},
+		{id: 2, Name: "goal", Money: 2},
+		{id: 3, Name: "collection", Money: 0},
+	}).(*collection.Collection)
+
+	assert.True(t, users.Sum("money") == 3)
+	assert.True(t, users.Avg("money") == 1)
+	assert.True(t, users.Max("money") == 2)
+	assert.True(t, users.Min("money") == 0)
 	assert.True(t, users.Count() == 3)
 }
 
@@ -170,13 +181,13 @@ func TestSortArray(t *testing.T) {
 		return user.Money > next.Money
 	})
 	fmt.Println(usersOrderByMoneyDesc.ToInterfaceArray())
-	assert.True(t, usersOrderByMoneyDesc.Index(0).(User).Money == 10086)
+	assert.True(t, usersOrderByMoneyDesc.ToInterfaceArray()[0].(User).Money == 10086)
 
 	usersOrderByMoneyAsc := users.Sort(func(user User, next User) bool {
 		return user.Money < next.Money
 	})
 	fmt.Println(usersOrderByMoneyAsc.ToInterfaceArray())
-	assert.True(t, usersOrderByMoneyAsc.Index(0).(User).Money == -5)
+	assert.True(t, usersOrderByMoneyAsc.ToInterfaceArray()[0].(User).Money == -5)
 
 	numbers := collection.MustNew([]interface{}{
 		8, 0, 1, 2, 0.6, 4, 5, 6, -0.2, 7, 9, 3, "10086",
@@ -188,4 +199,48 @@ func TestSortArray(t *testing.T) {
 
 	fmt.Println(sortedNumbers)
 	assert.True(t, sortedNumbers[0] == 10086)
+}
+
+// TestCombine 测试组合集合功能
+func TestCombine(t *testing.T) {
+	users := collection.MustNew([]User{
+		{id: 1, Name: "qbhy", Money: 12},
+	})
+
+	users = users.Push(User{id: 2, Name: "goal", Money: 1000})
+	//users = users.Prepend(User{id: 2, Name: "goal", Money: 1000}) // 插入到开头
+
+	assert.True(t, users.Len() == 2)
+	fmt.Println(users.ToInterfaceArray())
+
+	others := collection.MustNew([]User{
+		{id: 3, Name: "马云", Money: 100000000},
+	})
+
+	all := others.Merge(users).Sort(func(pre User, next User) bool {
+		return pre.Money > next.Money
+	})
+
+	assert.True(t, all.Len() == 3)
+	fmt.Println(all.ToInterfaceArray())
+	fmt.Println(all.Only("money", "name").ToArrayFields())
+
+	assert.True(t, all.First("name") == "马云") // 最有钱还是马云
+
+	normalUsers := all.Where("money", ">", 100)
+	assert.True(t, normalUsers.Len() == 2)                       // 两个普通人
+	assert.True(t, normalUsers.Last("name") == "goal")           // 筛选不影响排序，跟马云比还差了点
+	assert.False(t, normalUsers.IsEmpty())                       // 有普通人
+	assert.True(t, normalUsers.Where("money", "<", 0).IsEmpty()) // 普通人都没有负债
+
+	randomUsers := all.Random(2)
+	// 随机获取两个数据
+	assert.True(t, randomUsers.Len() == 2)
+	fmt.Println(randomUsers.ToInterfaceArray())
+
+	assert.True(t, all.Pull().(User).Name == "qbhy") // 从末尾取走一个
+	assert.True(t, all.Len() == 2)                   // 判断取走后的长度
+	assert.True(t, all.Shift().(User).Name == "马云")  // 从开头取走一个
+	assert.True(t, all.Len() == 1)                   // 判断取走后的长度
+
 }

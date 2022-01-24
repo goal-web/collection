@@ -25,13 +25,13 @@ func (this *Collection) Less(i, j int) bool {
 	return i > j
 }
 
-func (this *Collection) SetSorter(sorter func(i, j int) bool) *Collection {
+func (this *Collection) SetSorter(sorter func(i, j int) bool) contracts.Collection {
 	this.sorter = sorter
 	return this
 }
 
 // Sort sorter 必须是接收两个参数，并且返回一个 bool 值的函数
-func (this *Collection) Sort(sorter interface{}) *Collection {
+func (this *Collection) Sort(sorter interface{}) contracts.Collection {
 	sorterType := reflect.TypeOf(sorter)
 
 	if sorterType.Kind() != reflect.Func || sorterType.NumIn() != 2 || sorterType.NumOut() != 1 || sorterType.Out(0).Kind() != reflect.Bool {
@@ -54,7 +54,7 @@ func (this *Collection) Sort(sorter interface{}) *Collection {
 		})[0].Bool()
 	})
 
-	sort.Sort(newCollection)
+	sort.Stable(newCollection)
 
 	return newCollection
 }

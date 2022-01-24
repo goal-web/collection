@@ -6,8 +6,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// Sum struct 或者 map 情况下需要传 key
-func (this *Collection) Sum(key ...string) (sum decimal.Decimal) {
+// SafeSum struct 或者 map 情况下需要传 key
+func (this *Collection) SafeSum(key ...string) (sum decimal.Decimal) {
 	sum = decimal.NewFromInt(0)
 	if len(key) == 0 {
 		for _, f := range this.ToFloat64Array() {
@@ -21,13 +21,13 @@ func (this *Collection) Sum(key ...string) (sum decimal.Decimal) {
 	return
 }
 
-// Avg struct 或者 map 情况下需要传 key
-func (this *Collection) Avg(key ...string) (sum decimal.Decimal) {
-	return this.Sum(key...).Div(decimal.NewFromInt32(int32(this.Count())))
+// SafeAvg struct 或者 map 情况下需要传 key
+func (this *Collection) SafeAvg(key ...string) (sum decimal.Decimal) {
+	return this.SafeSum(key...).Div(decimal.NewFromInt32(int32(this.Count())))
 }
 
-// Max struct 或者 map 情况下需要传 key
-func (this *Collection) Max(key ...string) (max decimal.Decimal) {
+// SafeMax struct 或者 map 情况下需要传 key
+func (this *Collection) SafeMax(key ...string) (max decimal.Decimal) {
 	if len(key) == 0 {
 		for _, f := range this.ToFloat64Array() {
 			if max.IsZero() {
@@ -48,8 +48,8 @@ func (this *Collection) Max(key ...string) (max decimal.Decimal) {
 	return
 }
 
-// Min struct 或者 map 情况下需要传 key
-func (this *Collection) Min(key ...string) (min decimal.Decimal) {
+// SafeMin struct 或者 map 情况下需要传 key
+func (this *Collection) SafeMin(key ...string) (min decimal.Decimal) {
 	if len(key) == 0 {
 		for _, f := range this.ToFloat64Array() {
 			if min.IsZero() {
@@ -72,4 +72,63 @@ func (this *Collection) Min(key ...string) (min decimal.Decimal) {
 
 func (this *Collection) Count() int {
 	return len(this.array)
+}
+
+func (this *Collection) Sum(key ...string) (sum float64) {
+	if len(key) == 0 {
+		for _, f := range this.ToFloat64Array() {
+			sum += f
+		}
+	} else {
+		this.Map(func(fields contracts.Fields) {
+			sum += utils.GetFloat64Field(fields, key[0])
+		})
+	}
+	return
+}
+
+func (this *Collection) Max(key ...string) (max float64) {
+	if len(key) == 0 {
+		for i, f := range this.ToFloat64Array() {
+			if i == 0 {
+				max = f
+			} else if f > max {
+				max = f
+			}
+		}
+	} else {
+		this.Map(func(fields contracts.Fields, index int) {
+			if index == 0 {
+				max = utils.GetFloat64Field(fields, key[0])
+			} else if float := utils.GetFloat64Field(fields, key[0]); float > max {
+				max = float
+			}
+		})
+	}
+	return
+}
+
+func (this *Collection) Min(key ...string) (min float64) {
+	if len(key) == 0 {
+		for i, f := range this.ToFloat64Array() {
+			if i == 0 {
+				min = f
+			} else if f < min {
+				min = f
+			}
+		}
+	} else {
+		this.Map(func(fields contracts.Fields, index int) {
+			if index == 0 {
+				min = utils.GetFloat64Field(fields, key[0])
+			} else if float := utils.GetFloat64Field(fields, key[0]); float < min {
+				min = float
+			}
+		})
+	}
+	return
+}
+
+func (this *Collection) Avg(key ...string) float64 {
+	return this.Sum(key...) / float64(this.Count())
 }
