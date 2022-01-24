@@ -28,21 +28,24 @@ func TestArray(t *testing.T) {
 	assert.True(t, intCollection.Len() == 6)
 
 	// 第二个参数是数据索引
-	intCollection.Map(func(data int, index string) {
-		fmt.Println(fmt.Sprintf("第 %s 个，值：%d", index, data))
+	intCollection.Map(func(data, index int) {
+		fmt.Println(fmt.Sprintf("第 %d 个，值：%d", index, data))
 	})
 
 	// 第三个参数是所有数据集合
-	intCollection.Map(func(data int, index string, allData contracts.Fields) {
-		fmt.Println(fmt.Sprintf("第 %s 个，值：%d", index, data))
+	intCollection.Map(func(data, index int, allData []interface{}) {
+		if index == 0 {
+			fmt.Println("allData", allData)
+		}
+		fmt.Println(fmt.Sprintf("第 %d 个，值：%d", index, data))
 	})
 
 	// 甚至可以直接转换成你想要的类型
-	intCollection.Map(func(data string, index string) {
-		fmt.Println(fmt.Sprintf("第 %s 个，值：%s", index, data))
+	intCollection.Map(func(data string, index int) {
+		fmt.Println(fmt.Sprintf("第 %d 个，值：%s", index, data))
 	})
-	intCollection.Map(func(data bool, index string) {
-		fmt.Println(fmt.Sprintf("第 %s 个，值：%v", index, data))
+	intCollection.Map(func(data bool, index int) {
+		fmt.Println(fmt.Sprintf("第 %d 个，值：%v", index, data))
 	})
 
 	// 不返回任何值表示只遍历
@@ -185,5 +188,4 @@ func TestSortArray(t *testing.T) {
 
 	fmt.Println(sortedNumbers)
 	assert.True(t, sortedNumbers[0] == 10086)
-
 }

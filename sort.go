@@ -5,7 +5,6 @@ import (
 	"github.com/goal-web/supports/exceptions"
 	"reflect"
 	"sort"
-	"strconv"
 )
 
 func (this *Collection) Len() int {
@@ -13,11 +12,9 @@ func (this *Collection) Len() int {
 }
 
 func (this *Collection) Swap(i, j int) {
-	preIndex := strconv.Itoa(i)
-	nextIndex := strconv.Itoa(j)
-	this.array[preIndex], this.array[nextIndex] = this.array[nextIndex], this.array[preIndex]
+	this.array[i], this.array[j] = this.array[j], this.array[i]
 	if len(this.mapData) > 0 {
-		this.mapData[preIndex], this.mapData[nextIndex] = this.mapData[nextIndex], this.mapData[preIndex]
+		this.mapData[i], this.mapData[j] = this.mapData[j], this.mapData[i]
 	}
 }
 
@@ -47,10 +44,13 @@ func (this *Collection) Sort(sorter interface{}) *Collection {
 	}
 	sorterValue := reflect.ValueOf(sorter)
 
-	newCollection := (&Collection{mapData: this.mapData, array: this.array}).SetSorter(func(i, j int) bool {
+	newCollection := (&Collection{
+		mapData: this.mapData,
+		array:   this.array,
+	}).SetSorter(func(i, j int) bool {
 		return sorterValue.Call([]reflect.Value{
-			this.argumentConvertor(sorterType.In(0), this.array[strconv.Itoa(i)]),
-			this.argumentConvertor(sorterType.In(1), this.array[strconv.Itoa(j)]),
+			this.argumentConvertor(sorterType.In(0), this.array[i]),
+			this.argumentConvertor(sorterType.In(1), this.array[j]),
 		})[0].Bool()
 	})
 
