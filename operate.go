@@ -156,12 +156,14 @@ func (this *Collection) Chunk(size int, handler func(collection contracts.Collec
 	total := this.Count()
 	page := 1
 	for err == nil && (page-1)*size <= total {
-		newCollection := &Collection{
-			array: this.array[(page-1)*size : size],
+		offset := (page - 1) * size
+		endIndex := size + offset
+		if endIndex > total {
+			endIndex = total
 		}
-
+		newCollection := &Collection{array: this.array[offset:endIndex]}
 		if len(this.mapData) > 0 {
-			newCollection.mapData = this.mapData[(page-1)*size : size]
+			newCollection.mapData = this.mapData[offset:endIndex]
 		}
 
 		err = handler(newCollection, page)

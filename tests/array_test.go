@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"errors"
 	"fmt"
 	"github.com/goal-web/collection"
 	"github.com/goal-web/contracts"
@@ -242,5 +243,40 @@ func TestCombine(t *testing.T) {
 	assert.True(t, all.Len() == 2)                   // 判断取走后的长度
 	assert.True(t, all.Shift().(User).Name == "马云")  // 从开头取走一个
 	assert.True(t, all.Len() == 1)                   // 判断取走后的长度
+
+}
+
+func TestChunk(t *testing.T) {
+	collect := collection.MustNew([]int{
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+	})
+
+	err := collect.Chunk(5, func(collection contracts.Collection, page int) error {
+		fmt.Printf("页码：%d，数量：%d %v\n", page, collection.Len(), collection.ToInterfaceArray())
+		switch page {
+		case 4:
+			assert.True(t, collection.Len() == 4)
+		default:
+			assert.True(t, collection.Len() == 5)
+		}
+		return nil
+	})
+	assert.Nil(t, err)
+
+	err = collection.MustNew([]User{
+		{id: 1, Name: "qbhy", Money: 12},
+		{id: 2, Name: "goal", Money: 1},
+		{id: 2, Name: "goal", Money: 15},
+		{id: 2, Name: "goal99", Money: 99},
+		{id: 3, Name: "collection", Money: -5},
+		{id: 3, Name: "移动", Money: 10086},
+	}).Chunk(3, func(collection contracts.Collection, page int) error {
+		assert.True(t, page == 1)
+		assert.True(t, collection.First("name") == "qbhy")
+		assert.True(t, collection.Last("name") == "goal")
+		return errors.New("第一页退出")
+	})
+
+	assert.Error(t, err)
 
 }
