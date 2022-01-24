@@ -1,6 +1,10 @@
 package collection
 
-import "github.com/goal-web/supports/utils"
+import (
+	"github.com/goal-web/contracts"
+	"github.com/goal-web/supports/utils"
+	"strconv"
+)
 
 func (this *Collection) ToIntArray() (results []int) {
 	for _, data := range this.array {
@@ -45,4 +49,16 @@ func (this *Collection) ToStringArray() (results []string) {
 		results = append(results, utils.ConvertToString(data, ""))
 	}
 	return
+}
+
+func (this *Collection) ToFields() contracts.Fields {
+	fields := contracts.Fields{}
+	for index, data := range this.mapData {
+		fields[strconv.Itoa(index)] = data
+	}
+	return fields
+}
+
+func (this *Collection) ToArrayFields() []contracts.Fields {
+	return this.mapData
 }
