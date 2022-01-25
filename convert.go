@@ -1,9 +1,13 @@
 package collection
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/goal-web/contracts"
+	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
 	"strconv"
+	"strings"
 )
 
 func (this *Collection) ToIntArray() (results []int) {
@@ -61,4 +65,25 @@ func (this *Collection) ToFields() contracts.Fields {
 
 func (this *Collection) ToArrayFields() []contracts.Fields {
 	return this.mapData
+}
+
+func (this *Collection) ToJson() string {
+	results := make([]string, 0)
+	this.Map(func(data interface{}) {
+		if jsonify, isJson := data.(contracts.Json); isJson {
+			results = append(results, jsonify.ToJson())
+			return
+		}
+		jsonStr, err := json.Marshal(data)
+		if err != nil {
+			logs.WithError(err).WithFields(this.ToFields()).Fatal("json err")
+		}
+		results = append(results, string(jsonStr))
+	})
+
+	return fmt.Sprintf("[%s]", strings.Join(results, ","))
+}
+
+func (this *Collection) String() string {
+	return this.ToJson()
 }

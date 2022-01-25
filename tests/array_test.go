@@ -66,8 +66,22 @@ func TestArray(t *testing.T) {
 
 type User struct {
 	id    int
-	Name  string
+	Name  string `json:"name"`
 	Money float64
+}
+
+func TestToJson(t *testing.T) {
+	users := collection.MustNew([]User{
+		{id: 1, Name: "qbhy", Money: 1},
+		{id: 2, Name: "goal", Money: 2},
+		{id: 3, Name: "collection", Money: 0},
+	})
+	any := collection.MustNew([]interface{}{
+		"1", 2, 3.0, true, users.First(), users,
+	})
+
+	fmt.Println(users.ToJson())
+	fmt.Println(any.ToJson())
 }
 
 func TestStructArray(t *testing.T) {
