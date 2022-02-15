@@ -8,9 +8,10 @@ import (
 func (this *Collection) Pluck(key string) contracts.Fields {
 	fields := contracts.Fields{}
 
-	for _, data := range this.mapData {
-		if _, exists := fields[key]; !exists {
-			fields[key] = data
+	for index, data := range this.mapData {
+		var name, ok = data[key].(string)
+		if _, exists := fields[name]; ok && !exists {
+			fields[name] = this.array[index]
 		}
 	}
 
