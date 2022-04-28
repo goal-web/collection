@@ -7,7 +7,7 @@ import (
 )
 
 // SafeSum struct 或者 map 情况下需要传 key
-func (this *Collection) SafeSum(key ...string) (sum decimal.Decimal) {
+func (this *Collection[T]) SafeSum(key ...string) (sum decimal.Decimal) {
 	sum = decimal.NewFromInt(0)
 	if len(key) == 0 {
 		for _, f := range this.ToFloat64Array() {
@@ -22,12 +22,12 @@ func (this *Collection) SafeSum(key ...string) (sum decimal.Decimal) {
 }
 
 // SafeAvg struct 或者 map 情况下需要传 key
-func (this *Collection) SafeAvg(key ...string) (sum decimal.Decimal) {
+func (this *Collection[T]) SafeAvg(key ...string) (sum decimal.Decimal) {
 	return this.SafeSum(key...).Div(decimal.NewFromInt32(int32(this.Count())))
 }
 
 // SafeMax struct 或者 map 情况下需要传 key
-func (this *Collection) SafeMax(key ...string) (max decimal.Decimal) {
+func (this *Collection[T]) SafeMax(key ...string) (max decimal.Decimal) {
 	if len(key) == 0 {
 		for _, f := range this.ToFloat64Array() {
 			if max.IsZero() {
@@ -49,7 +49,7 @@ func (this *Collection) SafeMax(key ...string) (max decimal.Decimal) {
 }
 
 // SafeMin struct 或者 map 情况下需要传 key
-func (this *Collection) SafeMin(key ...string) (min decimal.Decimal) {
+func (this *Collection[T]) SafeMin(key ...string) (min decimal.Decimal) {
 	if len(key) == 0 {
 		for _, f := range this.ToFloat64Array() {
 			if min.IsZero() {
@@ -70,11 +70,11 @@ func (this *Collection) SafeMin(key ...string) (min decimal.Decimal) {
 	return
 }
 
-func (this *Collection) Count() int {
-	return len(this.array)
+func (this *Collection[T]) Count() int {
+	return len(this.rawData)
 }
 
-func (this *Collection) Sum(key ...string) (sum float64) {
+func (this *Collection[T]) Sum(key ...string) (sum float64) {
 	if len(key) == 0 {
 		for _, f := range this.ToFloat64Array() {
 			sum += f
@@ -87,7 +87,7 @@ func (this *Collection) Sum(key ...string) (sum float64) {
 	return
 }
 
-func (this *Collection) Max(key ...string) (max float64) {
+func (this *Collection[T]) Max(key ...string) (max float64) {
 	if len(key) == 0 {
 		for i, f := range this.ToFloat64Array() {
 			if i == 0 {
@@ -108,7 +108,7 @@ func (this *Collection) Max(key ...string) (max float64) {
 	return
 }
 
-func (this *Collection) Min(key ...string) (min float64) {
+func (this *Collection[T]) Min(key ...string) (min float64) {
 	if len(key) == 0 {
 		for i, f := range this.ToFloat64Array() {
 			if i == 0 {
@@ -129,6 +129,6 @@ func (this *Collection) Min(key ...string) (min float64) {
 	return
 }
 
-func (this *Collection) Avg(key ...string) float64 {
+func (this *Collection[T]) Avg(key ...string) float64 {
 	return this.Sum(key...) / float64(this.Count())
 }

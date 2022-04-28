@@ -5,20 +5,20 @@ import (
 	"github.com/goal-web/supports/utils"
 )
 
-func (this *Collection) Pluck(key string) contracts.Fields {
+func (this *Collection[T]) Pluck(key string) contracts.Fields {
 	fields := contracts.Fields{}
 
-	for index, data := range this.mapData {
+	for index, data := range this.rawData {
 		var name, ok = data[key].(string)
 		if _, exists := fields[name]; ok && !exists {
-			fields[name] = this.array[index]
+			fields[name] = this.rawData[index]
 		}
 	}
 
 	return fields
 }
 
-func (this *Collection) Only(keys ...string) contracts.Collection {
+func (this *Collection[T]) Only(keys ...string) contracts.Collection[T] {
 	arrayFields := make([]contracts.Fields, 0)
 	rawResults := make([]interface{}, 0)
 
@@ -30,35 +30,29 @@ func (this *Collection) Only(keys ...string) contracts.Collection {
 			}
 		}
 		arrayFields = append(arrayFields, fields)
-		rawResults = append(rawResults, this.array[index])
+		rawResults = append(rawResults, this.rawData[index])
 	}
 
 	return &Collection{mapData: arrayFields, array: rawResults}
 }
 
-func (this *Collection) First(keys ...string) interface{} {
-	if this.Count() == 0 {
+func (this *Collection[T]) First() T {
+	if this.IsEmpty() {
 		return nil
 	}
-	if len(keys) == 0 {
-		return this.array[0]
-	}
-	return this.mapData[0][keys[0]]
+	return this.rawData[0]
 }
 
-func (this *Collection) Last(keys ...string) interface{} {
-	if this.Count() == 0 {
+func (this *Collection[T]) Last() T {
+	if this.IsEmpty() {
 		return nil
 	}
-	if len(keys) == 0 {
-		return this.array[len(this.array)-1]
-	}
-	return this.mapData[len(this.array)-1][keys[0]]
+	return this.rawData[len(this.rawData)-1]
 }
 
-func (this *Collection) Prepend(items ...interface{}) contracts.Collection {
+func (this *Collection[T]) Prepend(items ...interface{}) contracts.Collection[T] {
 	newCollection := &Collection{}
-	newCollection.array = append(items, this.array...)
+	newCollection.array = append(items, this.rawData...)
 	if len(this.mapData) > 0 {
 		newMaps := make([]contracts.Fields, 0)
 		for _, item := range items {
@@ -70,9 +64,9 @@ func (this *Collection) Prepend(items ...interface{}) contracts.Collection {
 	return newCollection
 }
 
-func (this *Collection) Push(items ...interface{}) contracts.Collection {
+func (this *Collection[T]) Push(items ...interface{}) contracts.Collection[T] {
 	newCollection := &Collection{}
-	newCollection.array = append(this.array, items...)
+	newCollection.array = append(this.rawData, items...)
 	if len(this.mapData) > 0 {
 		newMaps := make([]contracts.Fields, 0)
 		for _, item := range items {
@@ -84,9 +78,9 @@ func (this *Collection) Push(items ...interface{}) contracts.Collection {
 	return newCollection
 }
 
-func (this *Collection) Pull(defaultValue ...interface{}) interface{} {
+func (this *Collection[T]) Pull(defaultValue ...interface{}) interface{} {
 	if result := this.Last(); result != nil {
-		this.array = this.array[:this.Count()-1]
+		this.rawData = this.rawData[:this.Count()-1]
 		if len(this.mapData) > 0 {
 			this.mapData = this.mapData[:this.Count()-1]
 		}
@@ -98,9 +92,9 @@ func (this *Collection) Pull(defaultValue ...interface{}) interface{} {
 	return nil
 }
 
-func (this *Collection) Shift(defaultValue ...interface{}) interface{} {
+func (this *Collection[T]) Shift(defaultValue ...interface{}) interface{} {
 	if result := this.First(); result != nil {
-		this.array = this.array[1:]
+		this.rawData = this.rawData[1:]
 		if len(this.mapData) > 0 {
 			this.mapData = this.mapData[1:]
 		}
@@ -112,9 +106,9 @@ func (this *Collection) Shift(defaultValue ...interface{}) interface{} {
 	return nil
 }
 
-func (this *Collection) Offset(index int, item interface{}) contracts.Collection {
+func (this *Collection[T]) Offset(index int, item T) contracts.Collection[T] {
 	if this.Count() > index {
-		this.array[index] = item
+		this.rawData[index] = item
 		if len(this.mapData) > 0 {
 			fields, _ := utils.ConvertToFields(item)
 			this.mapData[index] = fields
@@ -124,15 +118,15 @@ func (this *Collection) Offset(index int, item interface{}) contracts.Collection
 	return this.Push(item)
 }
 
-func (this *Collection) Put(index int, item interface{}) contracts.Collection {
+func (this *Collection[T]) Put(index int, item interface{}) contracts.Collection[T] {
 	if this.Count() > index {
-		return (&Collection{array: append(this.array), mapData: append(this.mapData)}).Offset(index, item)
+		return (&Collection{array: append(this.rawData), mapData: append(this.mapData)}).Offset(index, item)
 	}
 	return this.Push(item)
 }
 
-func (this *Collection) Merge(collections ...contracts.Collection) contracts.Collection {
-	newCollection := &Collection{array: append(this.array), mapData: append(this.mapData)}
+func (this *Collection[T]) Merge(collections ...contracts.Collection) contracts.Collection[T] {
+	newCollection := &Collection{array: append(this.rawData), mapData: append(this.mapData)}
 
 	for _, collection := range collections {
 		newCollection.mapData = append(newCollection.mapData, collection.ToArrayFields()...)
@@ -142,8 +136,8 @@ func (this *Collection) Merge(collections ...contracts.Collection) contracts.Col
 	return newCollection
 }
 
-func (this *Collection) Reverse() contracts.Collection {
-	newCollection := &Collection{array: append(this.array), mapData: append(this.mapData)}
+func (this *Collection[T]) Reverse() contracts.Collection[T] {
+	newCollection := &Collection{array: append(this.rawData), mapData: append(this.mapData)}
 	for from, to := 0, len(newCollection.array)-1; from < to; from, to = from+1, to-1 {
 		newCollection.array[from], newCollection.array[to] = newCollection.array[to], newCollection.array[from]
 		if len(this.mapData) > 0 {
@@ -153,7 +147,7 @@ func (this *Collection) Reverse() contracts.Collection {
 	return newCollection
 }
 
-func (this *Collection) Chunk(size int, handler func(collection contracts.Collection, page int) error) (err error) {
+func (this *Collection[T]) Chunk(size int, handler func(collection contracts.Collection, page int) error) (err error) {
 	total := this.Count()
 	page := 1
 	for err == nil && (page-1)*size <= total {
@@ -162,7 +156,7 @@ func (this *Collection) Chunk(size int, handler func(collection contracts.Collec
 		if endIndex > total {
 			endIndex = total
 		}
-		newCollection := &Collection{array: this.array[offset:endIndex]}
+		newCollection := &Collection{rawData: this.rawData[offset:endIndex]}
 		if len(this.mapData) > 0 {
 			newCollection.mapData = this.mapData[offset:endIndex]
 		}
@@ -174,7 +168,7 @@ func (this *Collection) Chunk(size int, handler func(collection contracts.Collec
 	return
 }
 
-func (this *Collection) Random(size ...uint) contracts.Collection {
+func (this *Collection[T]) Random(size ...uint) contracts.Collection[T] {
 	num := 1
 	if len(size) > 0 {
 		num = int(size[0])
@@ -182,7 +176,7 @@ func (this *Collection) Random(size ...uint) contracts.Collection {
 	newCollection := &Collection{}
 	if this.Count() >= num {
 		for _, index := range utils.RandIntArray(0, this.Count()-1, num) {
-			newCollection.array = append(newCollection.array, this.array[index])
+			newCollection.array = append(newCollection.rawData, this.rawData[index])
 			if len(this.mapData) > 0 {
 				newCollection.mapData = append(newCollection.mapData, this.mapData[index])
 			}
