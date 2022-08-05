@@ -32,7 +32,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestArray(t *testing.T) {
-	intCollection := collection.MustNew([]interface{}{
+	intCollection := collection.MustNew([]any{
 		1, 2, 3, true, "字符串", "true",
 	})
 	fmt.Println(intCollection.ToFloat64Array())
@@ -44,7 +44,7 @@ func TestArray(t *testing.T) {
 	})
 
 	// 第三个参数是所有数据集合
-	intCollection.Map(func(data, index int, allData []interface{}) {
+	intCollection.Map(func(data, index int, allData []any) {
 		if index == 0 {
 			fmt.Println("allData", allData)
 		}
@@ -200,7 +200,7 @@ func TestSortArray(t *testing.T) {
 	fmt.Println(usersOrderByMoneyAsc.ToInterfaceArray())
 	assert.True(t, usersOrderByMoneyAsc.ToInterfaceArray()[0].(User).Money == -5)
 
-	numbers := collection.MustNew([]interface{}{
+	numbers := collection.MustNew([]any{
 		8, 0, 1, 2, 0.6, 4, 5, 6, -0.2, 7, 9, 3, "10086",
 	})
 
@@ -260,7 +260,7 @@ func TestChunk(t *testing.T) {
 		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 	})
 
-	err := collect.Chunk(5, func(collection contracts.Collection, page int) error {
+	err := collect.Chunk(5, func(collection contracts.Collection[T], page int) error {
 		fmt.Printf("页码：%d，数量：%d %v\n", page, collection.Len(), collection.ToInterfaceArray())
 		switch page {
 		case 4:
@@ -279,7 +279,7 @@ func TestChunk(t *testing.T) {
 		{id: 2, Name: "goal99", Money: 99},
 		{id: 3, Name: "collection", Money: -5},
 		{id: 3, Name: "移动", Money: 10086},
-	}).Chunk(3, func(collection contracts.Collection, page int) error {
+	}).Chunk(3, func(collection contracts.Collection[T], page int) error {
 		assert.True(t, page == 1)
 		assert.True(t, collection.First("name") == "qbhy")
 		assert.True(t, collection.Last("name") == "goal")

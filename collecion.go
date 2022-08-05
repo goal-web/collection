@@ -1,11 +1,18 @@
 package collection
 
 import (
+	"encoding/json"
 	"github.com/goal-web/contracts"
-	"github.com/goal-web/supports/exceptions"
-	"github.com/goal-web/supports/utils"
 	"reflect"
 )
+
+func New[T any](rawData []T) contracts.Collection[T] {
+	return Make(rawData)
+}
+
+func Make[T any](rawData []T) *Collection[T] {
+	return &Collection[T]{rawData: rawData}
+}
 
 type Collection[T any] struct {
 	rawData []T
@@ -13,95 +20,74 @@ type Collection[T any] struct {
 	sorter  func(i, j int) bool
 }
 
-func New[T](data any) (contracts.Collection[T], error) {
-	dataValue := reflect.ValueOf(data)
+func (col *Collection[T]) IsEmpty() bool {
+	return col.Len() == 0
+}
+func (col *Collection[T]) Nil() T {
+	var result T
+	return result
+}
+func (col *Collection[T]) Clone() contracts.Collection[T] {
+	newCollection := New([]T{})
 
-	if dataValue.Kind() == reflect.Ptr {
-		dataValue = dataValue.Elem()
+	for _, item := range col.RawData() {
+		newCollection = newCollection.Push(item)
 	}
 
-	switch dataValue.Kind() {
-	case reflect.Array, reflect.Slice:
-		collect := &Collection[T]{rawData: nil}
-		isMapData := true
-
-		utils.EachSlice(dataValue, func(_ int, value reflect.Value) {
-			switch value.Kind() {
-			case reflect.Map, reflect.Struct:
-				collect.array = append(collect.array, value.Interface())
-			default:
-				isMapData = false
-				collect.array = append(collect.array, value.Interface())
-			}
-		})
-
-		if isMapData {
-			collect.mapData = make([]contracts.Fields, 0)
-			for _, item := range collect.array {
-				fields, _ := utils.ConvertToFields(item)
-				collect.mapData = append(collect.mapData, fields)
-			}
-		}
-
-		return collect, nil
-	}
-
-	return nil, Exception{
-		Exception: exceptions.New("不支持的类型 "+utils.GetTypeKey(reflect.TypeOf(data)), contracts.Fields{
-			"data": data,
-		}),
-	}
+	return newCollection
 }
 
-func MustNew[T](items []T) contracts.Collection[T] {
-	c, _ := New[T](items)
-	return c
+func (col *Collection[T]) RawData() []T {
+	return col.rawData
 }
 
-func Array[T any](data []T) contracts.Collection[T] {
-	collection := &Collection[T]{rawData: data}
-
-	return collection
-}
-
-func (this *Collection[T]) Index(index int) T {
-	if this.Count() > index {
-		return this.rawData[index]
+func (col *Collection[T]) Map(f func(item T, index int) T) contracts.Collection[T] {
+	for i, data := range col.rawData {
+		col.rawData[i] = f(data, i)
 	}
-	return nil
+	return col
 }
 
-func (this *Collection[T]) IsEmpty() bool {
-	return this.Count() == 0
+func (col *Collection[T]) Each(f func(item T, index int)) contracts.Collection[T] {
+	for i, data := range col.rawData {
+		f(data, i)
+	}
+	return col
 }
 
-func (this *Collection[T]) Map(fn func(T, int) T) contracts.Collection[T] {
-	var results []T
-	for index, item := range this.rawData {
-		results = append(results, fn(item, index))
+func (col *Collection[T]) ToAnyArray() []any {
+	array := make([]any, col.Len())
+	for i, data := range col.rawData {
+		array[i] = data
 	}
-
-	return Array(results)
+	return array
 }
 
-func (this *Collection[T]) argumentConvertor(argType reflect.Type, arg any) reflect.Value {
-	switch argType.Kind() {
-	case reflect.String:
-		return reflect.ValueOf(utils.ConvertToString(arg, ""))
-	case reflect.Int:
-		return reflect.ValueOf(utils.ConvertToInt(arg, 0))
-	case reflect.Int64:
-		return reflect.ValueOf(utils.ConvertToInt64(arg, 0))
-	case reflect.Float64:
-		return reflect.ValueOf(utils.ConvertToFloat64(arg, 0))
-	case reflect.Float32:
-		return reflect.ValueOf(utils.ConvertToFloat(arg, 0))
-	case reflect.Bool:
-		return reflect.ValueOf(utils.ConvertToBool(arg, false))
+func (col *Collection[T]) ToJson() any {
+	array := make([]any, col.Len())
+	for i, data := range col.rawData {
+		array[i] = data
 	}
-	if reflect.TypeOf(arg).ConvertibleTo(argType) {
-		return reflect.ValueOf(arg).Convert(argType)
-	}
-	return reflect.ValueOf(arg)
 
+	return array
+}
+
+func (col *Collection[T]) ToJsonString() string {
+	bytes, _ := json.Marshal(col.ToJson())
+	return string(bytes)
+}
+
+func (col *Collection[T]) Len() int {
+	return len(col.rawData)
+}
+
+func (col *Collection[T]) Less(i, j int) bool {
+	if col.sorter != nil {
+		return col.sorter(i, j)
+	}
+	return i > j
+}
+
+func (col *Collection[T]) Swap(i, j int) {
+	col.rawData[i], col.rawData[j] = col.rawData[j], col.rawData[i]
 }
