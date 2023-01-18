@@ -7,14 +7,14 @@ import (
 )
 
 // SafeSum struct 或者 map 情况下需要传 key
-func (this *Collection) SafeSum(key ...string) (sum decimal.Decimal) {
+func (col *Collection) SafeSum(key ...string) (sum decimal.Decimal) {
 	sum = decimal.NewFromInt(0)
 	if len(key) == 0 {
-		for _, f := range this.ToFloat64Array() {
+		for _, f := range col.ToFloat64Array() {
 			sum.Add(decimal.NewFromFloat(f))
 		}
 	} else {
-		this.Map(func(fields contracts.Fields) {
+		col.Map(func(fields contracts.Fields) {
 			sum = sum.Add(decimal.NewFromFloat(utils.GetFloat64Field(fields, key[0])))
 		})
 	}
@@ -22,14 +22,14 @@ func (this *Collection) SafeSum(key ...string) (sum decimal.Decimal) {
 }
 
 // SafeAvg struct 或者 map 情况下需要传 key
-func (this *Collection) SafeAvg(key ...string) (sum decimal.Decimal) {
-	return this.SafeSum(key...).Div(decimal.NewFromInt32(int32(this.Count())))
+func (col *Collection) SafeAvg(key ...string) (sum decimal.Decimal) {
+	return col.SafeSum(key...).Div(decimal.NewFromInt32(int32(col.Count())))
 }
 
 // SafeMax struct 或者 map 情况下需要传 key
-func (this *Collection) SafeMax(key ...string) (max decimal.Decimal) {
+func (col *Collection) SafeMax(key ...string) (max decimal.Decimal) {
 	if len(key) == 0 {
-		for _, f := range this.ToFloat64Array() {
+		for _, f := range col.ToFloat64Array() {
 			if max.IsZero() {
 				max = decimal.NewFromFloat(f)
 			} else if float := decimal.NewFromFloat(f); max.LessThan(float) {
@@ -37,7 +37,7 @@ func (this *Collection) SafeMax(key ...string) (max decimal.Decimal) {
 			}
 		}
 	} else {
-		this.Map(func(fields contracts.Fields) {
+		col.Map(func(fields contracts.Fields) {
 			if max.IsZero() {
 				max = decimal.NewFromFloat(utils.GetFloat64Field(fields, key[0]))
 			} else if float := decimal.NewFromFloat(utils.GetFloat64Field(fields, key[0])); max.LessThan(float) {
@@ -49,9 +49,9 @@ func (this *Collection) SafeMax(key ...string) (max decimal.Decimal) {
 }
 
 // SafeMin struct 或者 map 情况下需要传 key
-func (this *Collection) SafeMin(key ...string) (min decimal.Decimal) {
+func (col *Collection) SafeMin(key ...string) (min decimal.Decimal) {
 	if len(key) == 0 {
-		for _, f := range this.ToFloat64Array() {
+		for _, f := range col.ToFloat64Array() {
 			if min.IsZero() {
 				min = decimal.NewFromFloat(f)
 			} else if float := decimal.NewFromFloat(f); float.LessThan(min) {
@@ -59,7 +59,7 @@ func (this *Collection) SafeMin(key ...string) (min decimal.Decimal) {
 			}
 		}
 	} else {
-		this.Map(func(fields contracts.Fields) {
+		col.Map(func(fields contracts.Fields) {
 			if min.IsZero() {
 				min = decimal.NewFromFloat(utils.GetFloat64Field(fields, key[0]))
 			} else if float := decimal.NewFromFloat(utils.GetFloat64Field(fields, key[0])); float.LessThan(min) {
@@ -70,26 +70,26 @@ func (this *Collection) SafeMin(key ...string) (min decimal.Decimal) {
 	return
 }
 
-func (this *Collection) Count() int {
-	return len(this.array)
+func (col *Collection) Count() int {
+	return len(col.array)
 }
 
-func (this *Collection) Sum(key ...string) (sum float64) {
+func (col *Collection) Sum(key ...string) (sum float64) {
 	if len(key) == 0 {
-		for _, f := range this.ToFloat64Array() {
+		for _, f := range col.ToFloat64Array() {
 			sum += f
 		}
 	} else {
-		this.Map(func(fields contracts.Fields) {
+		col.Map(func(fields contracts.Fields) {
 			sum += utils.GetFloat64Field(fields, key[0])
 		})
 	}
 	return
 }
 
-func (this *Collection) Max(key ...string) (max float64) {
+func (col *Collection) Max(key ...string) (max float64) {
 	if len(key) == 0 {
-		for i, f := range this.ToFloat64Array() {
+		for i, f := range col.ToFloat64Array() {
 			if i == 0 {
 				max = f
 			} else if f > max {
@@ -97,7 +97,7 @@ func (this *Collection) Max(key ...string) (max float64) {
 			}
 		}
 	} else {
-		this.Map(func(fields contracts.Fields, index int) {
+		col.Map(func(fields contracts.Fields, index int) {
 			if index == 0 {
 				max = utils.GetFloat64Field(fields, key[0])
 			} else if float := utils.GetFloat64Field(fields, key[0]); float > max {
@@ -108,9 +108,9 @@ func (this *Collection) Max(key ...string) (max float64) {
 	return
 }
 
-func (this *Collection) Min(key ...string) (min float64) {
+func (col *Collection) Min(key ...string) (min float64) {
 	if len(key) == 0 {
-		for i, f := range this.ToFloat64Array() {
+		for i, f := range col.ToFloat64Array() {
 			if i == 0 {
 				min = f
 			} else if f < min {
@@ -118,7 +118,7 @@ func (this *Collection) Min(key ...string) (min float64) {
 			}
 		}
 	} else {
-		this.Map(func(fields contracts.Fields, index int) {
+		col.Map(func(fields contracts.Fields, index int) {
 			if index == 0 {
 				min = utils.GetFloat64Field(fields, key[0])
 			} else if float := utils.GetFloat64Field(fields, key[0]); float < min {
@@ -129,6 +129,6 @@ func (this *Collection) Min(key ...string) (min float64) {
 	return
 }
 
-func (this *Collection) Avg(key ...string) float64 {
-	return this.Sum(key...) / float64(this.Count())
+func (col *Collection) Avg(key ...string) float64 {
+	return col.Sum(key...) / float64(col.Count())
 }

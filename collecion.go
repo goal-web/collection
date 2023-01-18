@@ -69,48 +69,48 @@ func FromFieldsSlice(data []contracts.Fields) contracts.Collection {
 	return collection
 }
 
-func (this *Collection) Index(index int) interface{} {
-	if this.Count() > index {
-		return this.array[index]
+func (col *Collection) Index(index int) interface{} {
+	if col.Count() > index {
+		return col.array[index]
 	}
 	return nil
 }
 
-func (this *Collection) IsEmpty() bool {
-	return len(this.array) == 0
+func (col *Collection) IsEmpty() bool {
+	return len(col.array) == 0
 }
-func (this *Collection) Each(handler interface{}) contracts.Collection {
-	return this.Map(handler)
+func (col *Collection) Each(handler interface{}) contracts.Collection {
+	return col.Map(handler)
 }
 
-func (this *Collection) Map(handler interface{}) contracts.Collection {
+func (col *Collection) Map(handler interface{}) contracts.Collection {
 
 	switch handle := handler.(type) {
 	case func(fields contracts.Fields):
-		for _, fields := range this.mapData {
+		for _, fields := range col.mapData {
 			handle(fields)
 		}
 	case func(fields contracts.Fields, index int): // 聚合函数
-		for index, fields := range this.mapData {
+		for index, fields := range col.mapData {
 			handle(fields, index)
 		}
 	case func(fields contracts.Fields) contracts.Fields:
-		for index, fields := range this.mapData {
-			this.mapData[index] = handle(fields)
+		for index, fields := range col.mapData {
+			col.mapData[index] = handle(fields)
 		}
 	case func(fields contracts.Fields) bool: // 用于 where
 		results := make([]interface{}, 0)
-		for _, fields := range this.mapData {
+		for _, fields := range col.mapData {
 			results = append(results, handle(fields))
 		}
 		return &Collection{mapData: nil, array: results}
 	case func(fields interface{}):
-		for _, data := range this.array {
+		for _, data := range col.array {
 			handle(data)
 		}
 	case func(fields interface{}) interface{}:
-		for index, data := range this.array {
-			this.array[index] = handle(data)
+		for index, data := range col.array {
+			col.array[index] = handle(data)
 		}
 	default:
 		handlerType := reflect.TypeOf(handler)
@@ -123,20 +123,20 @@ func (this *Collection) Map(handler interface{}) contracts.Collection {
 		switch handlerType.NumIn() {
 		case 1:
 			argsGetter = func(_ int, arg interface{}) []reflect.Value {
-				return []reflect.Value{this.argumentConvertor(handlerType.In(0), arg)}
+				return []reflect.Value{col.argumentConvertor(handlerType.In(0), arg)}
 			}
 		case 2:
 			argsGetter = func(index int, arg interface{}) []reflect.Value {
 				return []reflect.Value{
-					this.argumentConvertor(handlerType.In(0), arg),
+					col.argumentConvertor(handlerType.In(0), arg),
 					reflect.ValueOf(index),
 				}
 			}
 		case 3:
-			array := reflect.ValueOf(this.array)
+			array := reflect.ValueOf(col.array)
 			argsGetter = func(index int, arg interface{}) []reflect.Value {
 				return []reflect.Value{
-					this.argumentConvertor(handlerType.In(0), arg),
+					col.argumentConvertor(handlerType.In(0), arg),
 					reflect.ValueOf(index),
 					array,
 				}
@@ -144,9 +144,9 @@ func (this *Collection) Map(handler interface{}) contracts.Collection {
 		}
 
 		if numOut > 0 {
-			mapLen := len(this.mapData)
+			mapLen := len(col.mapData)
 			newCollection := &Collection{mapData: make([]contracts.Fields, mapLen), array: make([]interface{}, 0)}
-			for index, data := range this.array {
+			for index, data := range col.array {
 				result := handlerValue.Call(argsGetter(index, data))[0].Interface()
 				if mapLen > 0 {
 					newCollection.mapData[index], _ = utils.ConvertToFields(result)
@@ -155,17 +155,17 @@ func (this *Collection) Map(handler interface{}) contracts.Collection {
 			}
 			return newCollection
 		} else {
-			for index, data := range this.array {
+			for index, data := range col.array {
 				handlerValue.Call(argsGetter(index, data))
 			}
 		}
 
 	}
 
-	return this
+	return col
 }
 
-func (this *Collection) argumentConvertor(argType reflect.Type, arg interface{}) reflect.Value {
+func (col *Collection) argumentConvertor(argType reflect.Type, arg interface{}) reflect.Value {
 	switch argType.Kind() {
 	case reflect.String:
 		return reflect.ValueOf(utils.ConvertToString(arg, ""))

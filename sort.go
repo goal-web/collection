@@ -7,31 +7,31 @@ import (
 	"sort"
 )
 
-func (this *Collection) Len() int {
-	return len(this.array)
+func (col *Collection) Len() int {
+	return len(col.array)
 }
 
-func (this *Collection) Swap(i, j int) {
-	this.array[i], this.array[j] = this.array[j], this.array[i]
-	if len(this.mapData) > 0 {
-		this.mapData[i], this.mapData[j] = this.mapData[j], this.mapData[i]
+func (col *Collection) Swap(i, j int) {
+	col.array[i], col.array[j] = col.array[j], col.array[i]
+	if len(col.mapData) > 0 {
+		col.mapData[i], col.mapData[j] = col.mapData[j], col.mapData[i]
 	}
 }
 
-func (this *Collection) Less(i, j int) bool {
-	if this.sorter != nil {
-		return this.sorter(i, j)
+func (col *Collection) Less(i, j int) bool {
+	if col.sorter != nil {
+		return col.sorter(i, j)
 	}
 	return i > j
 }
 
-func (this *Collection) SetSorter(sorter func(i, j int) bool) contracts.Collection {
-	this.sorter = sorter
-	return this
+func (col *Collection) SetSorter(sorter func(i, j int) bool) contracts.Collection {
+	col.sorter = sorter
+	return col
 }
 
 // Sort sorter 必须是接收两个参数，并且返回一个 bool 值的函数
-func (this *Collection) Sort(sorter interface{}) contracts.Collection {
+func (col *Collection) Sort(sorter interface{}) contracts.Collection {
 	sorterType := reflect.TypeOf(sorter)
 
 	if sorterType.Kind() != reflect.Func || sorterType.NumIn() != 2 || sorterType.NumOut() != 1 || sorterType.Out(0).Kind() != reflect.Bool {
@@ -45,12 +45,12 @@ func (this *Collection) Sort(sorter interface{}) contracts.Collection {
 	sorterValue := reflect.ValueOf(sorter)
 
 	newCollection := (&Collection{
-		mapData: this.mapData,
-		array:   this.array,
+		mapData: col.mapData,
+		array:   col.array,
 	}).SetSorter(func(i, j int) bool {
 		return sorterValue.Call([]reflect.Value{
-			this.argumentConvertor(sorterType.In(0), this.array[i]),
-			this.argumentConvertor(sorterType.In(1), this.array[j]),
+			col.argumentConvertor(sorterType.In(0), col.array[i]),
+			col.argumentConvertor(sorterType.In(1), col.array[j]),
 		})[0].Bool()
 	})
 
