@@ -1,17 +1,24 @@
 package collection
 
-import "github.com/goal-web/supports/exceptions"
+import (
+	"github.com/goal-web/contracts"
+)
 
 type Exception struct {
-	exceptions.Exception
+	Err      error
+	previous contracts.Exception
+}
+
+func (e Exception) Error() string {
+	return e.Err.Error()
+}
+
+func (e Exception) GetPrevious() contracts.Exception {
+	return e.previous
 }
 
 // MapException 遍历参数异常
-type MapException struct {
-	exceptions.Exception
-}
+type MapException = Exception
 
 // SortException 排序参数异常
-type SortException struct {
-	exceptions.Exception
-}
+type SortException = Exception

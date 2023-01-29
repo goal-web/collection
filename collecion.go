@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"errors"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports/exceptions"
 	"github.com/goal-web/supports/utils"
@@ -49,9 +50,7 @@ func New(data interface{}) (*Collection, error) {
 	}
 
 	return nil, Exception{
-		Exception: exceptions.New("不支持的类型 "+utils.GetTypeKey(reflect.TypeOf(data)), contracts.Fields{
-			"data": data,
-		}),
+		Err: errors.New("不支持的类型 " + utils.GetTypeKey(reflect.TypeOf(data))),
 	}
 }
 

@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"errors"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports/exceptions"
 	"reflect"
@@ -36,11 +37,8 @@ func (col *Collection) Sort(sorter interface{}) contracts.Collection {
 
 	if sorterType.Kind() != reflect.Func || sorterType.NumIn() != 2 || sorterType.NumOut() != 1 || sorterType.Out(0).Kind() != reflect.Bool {
 		exceptions.Throw(SortException{
-			exceptions.New(
-				"参数类型异常：sorter 必须是接收两个参数，并且返回一个 bool 值的函数",
-				contracts.Fields{
-					"sorter": sorter,
-				})})
+			Err: errors.New("参数类型异常：sorter 必须是接收两个参数，并且返回一个 bool 值的函数"),
+		})
 	}
 	sorterValue := reflect.ValueOf(sorter)
 

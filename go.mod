@@ -3,8 +3,8 @@ module github.com/goal-web/collection
 go 1.17
 
 require (
-	github.com/goal-web/contracts v0.1.13
-	github.com/goal-web/supports v0.1.10
+	github.com/goal-web/contracts v0.1.66
+	github.com/goal-web/supports v0.1.32
 	github.com/shopspring/decimal v1.3.1
 	github.com/stretchr/testify v1.7.0
 )
