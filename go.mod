@@ -1,6 +1,6 @@
 module github.com/goal-web/collection
 
-go 1.17
+go 1.19
 
 require (
 	github.com/goal-web/contracts v0.1.66
