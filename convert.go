@@ -10,66 +10,40 @@ import (
 	"strings"
 )
 
-func (col *Collection) ToIntArray() (results []int) {
-	for _, data := range col.array {
-		results = append(results, utils.ConvertToInt(data, 0))
-	}
-	return
-}
-
-func (col *Collection) ToInt64Array() (results []int64) {
-	for _, data := range col.array {
-		results = append(results, utils.ConvertToInt64(data, 0))
-	}
-	return
-}
-func (col *Collection) ToInterfaceArray() []interface{} {
+func (col *Collection[T]) ToArray() []T {
 	return col.array
 }
 
-func (col *Collection) ToFloatArray() (results []float32) {
-	for _, data := range col.array {
-		results = append(results, utils.ConvertToFloat(data, 0))
+func (col *Collection[T]) ToAnyArray() []any {
+	var array = make([]any, col.Len())
+	for i, data := range col.array {
+		array[i] = data
 	}
-	return
+	return array
 }
 
-func (col *Collection) ToFloat64Array() (results []float64) {
-	for _, data := range col.array {
-		results = append(results, utils.ConvertToFloat64(data, 0))
-	}
-	return
-}
-
-func (col *Collection) ToBoolArray() (results []bool) {
-	for _, data := range col.array {
-		results = append(results, utils.ConvertToBool(data, false))
-	}
-	return
-}
-
-func (col *Collection) ToStringArray() (results []string) {
-	for _, data := range col.array {
-		results = append(results, utils.ConvertToString(data, ""))
-	}
-	return
-}
-
-func (col *Collection) ToFields() contracts.Fields {
+func (col *Collection[T]) ToFields() contracts.Fields {
 	fields := contracts.Fields{}
-	for index, data := range col.mapData {
+	for index, data := range col.array {
 		fields[strconv.Itoa(index)] = data
 	}
 	return fields
 }
 
-func (col *Collection) ToArrayFields() []contracts.Fields {
-	return col.mapData
+func (col *Collection[T]) ToArrayFields() []contracts.Fields {
+	if col.mapArray == nil {
+		col.mapArray = make([]contracts.Fields, col.Len())
+		for i, data := range col.array {
+			col.mapArray[i], _ = utils.ToFields(data)
+		}
+	}
+
+	return col.mapArray
 }
 
-func (col *Collection) ToJson() string {
+func (col *Collection[T]) ToJson() string {
 	results := make([]string, 0)
-	col.Map(func(data interface{}) {
+	col.Map(func(data any) {
 		if jsonify, isJson := data.(contracts.Json); isJson {
 			results = append(results, jsonify.ToJson())
 			return
@@ -84,6 +58,6 @@ func (col *Collection) ToJson() string {
 	return fmt.Sprintf("[%s]", strings.Join(results, ","))
 }
 
-func (col *Collection) String() string {
+func (col *Collection[T]) String() string {
 	return col.ToJson()
 }

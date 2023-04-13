@@ -32,7 +32,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestArray(t *testing.T) {
-	intCollection := collection.MustNew([]interface{}{
+	intCollection := collection.MustNew([]any{
 		1, 2, 3, true, "字符串", "true",
 	})
 	fmt.Println(intCollection.ToFloat64Array())
@@ -44,7 +44,7 @@ func TestArray(t *testing.T) {
 	})
 
 	// 第三个参数是所有数据集合
-	intCollection.Map(func(data, index int, allData []interface{}) {
+	intCollection.Map(func(data, index int, allData []any) {
 		if index == 0 {
 			fmt.Println("allData", allData)
 		}
@@ -144,9 +144,9 @@ func TestAggregateArray(t *testing.T) {
 		{id: 1, Name: "qbhy", Money: 10000000000000000},
 		{id: 2, Name: "goal", Money: 10000000000000000},
 		{id: 3, Name: "collection", Money: 0.645624123},
-	}).(*collection.Collection)
+	}).(*Collection[T].Collection)
 
-	// SafeSum、SafeAvg、SafeMax、SafeMin 等方法需要 *collection.Collection 类型
+	// SafeSum、SafeAvg、SafeMax、SafeMin 等方法需要 *Collection[T].Collection 类型
 	fmt.Println("Sum", users.SafeSum("money"))
 	fmt.Println("Avg", users.SafeAvg("money"))
 	fmt.Println("Max", users.SafeMax("money"))
@@ -165,7 +165,7 @@ func TestAggregateArray(t *testing.T) {
 		{id: 1, Name: "qbhy", Money: 1},
 		{id: 2, Name: "goal", Money: 2},
 		{id: 3, Name: "collection", Money: 0},
-	}).(*collection.Collection)
+	}).(*Collection[T].Collection)
 
 	assert.True(t, users.Sum("money") == 3)
 	assert.True(t, users.Avg("money") == 1)
@@ -200,7 +200,7 @@ func TestSortArray(t *testing.T) {
 	fmt.Println(usersOrderByMoneyAsc.ToInterfaceArray())
 	assert.True(t, usersOrderByMoneyAsc.ToInterfaceArray()[0].(User).Money == -5)
 
-	numbers := collection.MustNew([]interface{}{
+	numbers := collection.MustNew([]any{
 		8, 0, 1, 2, 0.6, 4, 5, 6, -0.2, 7, 9, 3, "10086",
 	})
 

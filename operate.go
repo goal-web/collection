@@ -5,10 +5,10 @@ import (
 	"github.com/goal-web/supports/utils"
 )
 
-func (col *Collection) Pluck(key string) contracts.Fields {
-	fields := contracts.Fields{}
+func (col *Collection[T]) Pluck(key string) map[string]T {
+	fields := map[string]T{}
 
-	for index, data := range col.mapData {
+	for index, data := range col.ToArrayFields() {
 		var name, ok = data[key].(string)
 		if _, exists := fields[name]; ok && !exists {
 			fields[name] = col.array[index]
@@ -18,142 +18,111 @@ func (col *Collection) Pluck(key string) contracts.Fields {
 	return fields
 }
 
-func (col *Collection) Only(keys ...string) contracts.Collection {
-	arrayFields := make([]contracts.Fields, 0)
-	rawResults := make([]interface{}, 0)
+func (col *Collection[T]) GroupBy(key string) map[string][]T {
+	list := map[string][]T{}
 
-	for index, data := range col.mapData {
+	for index, data := range col.ToArrayFields() {
+		var value, _ = data[key].(string)
+		list[value] = append(list[value], col.array[index])
+	}
+
+	return list
+}
+
+func (col *Collection[T]) Only(keys ...string) contracts.Collection[T] {
+	rawResults := make([]T, 0)
+
+	for index, data := range col.ToArrayFields() {
 		fields := contracts.Fields{}
 		for key, value := range data {
 			if utils.IsIn(key, keys) {
 				fields[key] = value
 			}
 		}
-		arrayFields = append(arrayFields, fields)
 		rawResults = append(rawResults, col.array[index])
 	}
 
-	return &Collection{mapData: arrayFields, array: rawResults}
+	return New(rawResults)
 }
 
-func (col *Collection) First(keys ...string) interface{} {
+func (col *Collection[T]) First() *T {
 	if col.Count() == 0 {
 		return nil
 	}
-	if len(keys) == 0 {
-		return col.array[0]
-	}
-	return col.mapData[0][keys[0]]
+	return &col.array[0]
 }
 
-func (col *Collection) Last(keys ...string) interface{} {
+func (col *Collection[T]) Last() *T {
 	if col.Count() == 0 {
 		return nil
 	}
-	if len(keys) == 0 {
-		return col.array[len(col.array)-1]
-	}
-	return col.mapData[len(col.array)-1][keys[0]]
+	return &col.array[len(col.array)-1]
 }
 
-func (col *Collection) Prepend(items ...interface{}) contracts.Collection {
-	newCollection := &Collection{}
-	newCollection.array = append(items, col.array...)
-	if len(col.mapData) > 0 {
-		newMaps := make([]contracts.Fields, 0)
-		for _, item := range items {
-			fields, _ := utils.ConvertToFields(item)
-			newMaps = append(newMaps, fields)
-		}
-		newCollection.mapData = append(newMaps, col.mapData...)
-	}
-	return newCollection
+func (col *Collection[T]) Prepend(items ...T) contracts.Collection[T] {
+	return New(append(items, col.array...))
 }
 
-func (col *Collection) Push(items ...interface{}) contracts.Collection {
-	newCollection := &Collection{}
-	newCollection.array = append(col.array, items...)
-	if len(col.mapData) > 0 {
-		newMaps := make([]contracts.Fields, 0)
-		for _, item := range items {
-			fields, _ := utils.ConvertToFields(item)
-			newMaps = append(newMaps, fields)
-		}
-		newCollection.mapData = append(col.mapData, newMaps...)
-	}
-	return newCollection
+func (col *Collection[T]) Push(items ...T) contracts.Collection[T] {
+	return New(append(col.array, items...))
 }
 
-func (col *Collection) Pull(defaultValue ...interface{}) interface{} {
+func (col *Collection[T]) Pull(defaultValue ...T) *T {
 	if result := col.Last(); result != nil {
 		col.array = col.array[:col.Count()-1]
-		if len(col.mapData) > 0 {
-			col.mapData = col.mapData[:col.Count()-1]
-		}
 		return result
 	} else if len(defaultValue) > 0 {
-		return defaultValue[0]
+		return &defaultValue[0]
 	}
 
 	return nil
 }
 
-func (col *Collection) Shift(defaultValue ...interface{}) interface{} {
+func (col *Collection[T]) Shift(defaultValue ...T) *T {
 	if result := col.First(); result != nil {
 		col.array = col.array[1:]
-		if len(col.mapData) > 0 {
-			col.mapData = col.mapData[1:]
-		}
 		return result
 	} else if len(defaultValue) > 0 {
-		return defaultValue[0]
+		return &defaultValue[0]
 	}
 
 	return nil
 }
 
-func (col *Collection) Offset(index int, item interface{}) contracts.Collection {
+func (col *Collection[T]) Offset(index int, item T) contracts.Collection[T] {
 	if col.Count() > index {
 		col.array[index] = item
-		if len(col.mapData) > 0 {
-			fields, _ := utils.ConvertToFields(item)
-			col.mapData[index] = fields
-		}
 		return col
 	}
 	return col.Push(item)
 }
 
-func (col *Collection) Put(index int, item interface{}) contracts.Collection {
+func (col *Collection[T]) Put(index int, item T) contracts.Collection[T] {
 	if col.Count() > index {
-		return (&Collection{array: append(col.array), mapData: append(col.mapData)}).Offset(index, item)
+		return New(col.array).Offset(index, item)
 	}
 	return col.Push(item)
 }
 
-func (col *Collection) Merge(collections ...contracts.Collection) contracts.Collection {
-	newCollection := &Collection{array: append(col.array), mapData: append(col.mapData)}
+func (col *Collection[T]) Merge(collections ...contracts.Collection[T]) contracts.Collection[T] {
+	newCollection := New(col.array)
 
 	for _, collection := range collections {
-		newCollection.mapData = append(newCollection.mapData, collection.ToArrayFields()...)
-		newCollection.array = append(newCollection.array, collection.ToInterfaceArray()...)
+		newCollection = newCollection.Push(collection.ToArray()...)
 	}
 
 	return newCollection
 }
 
-func (col *Collection) Reverse() contracts.Collection {
-	newCollection := &Collection{array: append(col.array), mapData: append(col.mapData)}
+func (col *Collection[T]) Reverse() contracts.Collection[T] {
+	newCollection := &Collection[T]{array: append(col.array)}
 	for from, to := 0, len(newCollection.array)-1; from < to; from, to = from+1, to-1 {
 		newCollection.array[from], newCollection.array[to] = newCollection.array[to], newCollection.array[from]
-		if len(col.mapData) > 0 {
-			newCollection.mapData[from], newCollection.mapData[to] = newCollection.mapData[to], newCollection.mapData[from]
-		}
 	}
 	return newCollection
 }
 
-func (col *Collection) Chunk(size int, handler func(collection contracts.Collection, page int) error) (err error) {
+func (col *Collection[T]) Chunk(size int, handler func(collection contracts.Collection[T], page int) error) (err error) {
 	total := col.Count()
 	page := 1
 	for err == nil && (page-1)*size <= total {
@@ -162,10 +131,7 @@ func (col *Collection) Chunk(size int, handler func(collection contracts.Collect
 		if endIndex > total {
 			endIndex = total
 		}
-		newCollection := &Collection{array: col.array[offset:endIndex]}
-		if len(col.mapData) > 0 {
-			newCollection.mapData = col.mapData[offset:endIndex]
-		}
+		newCollection := &Collection[T]{array: col.array[offset:endIndex]}
 
 		err = handler(newCollection, page)
 		page++
@@ -174,18 +140,15 @@ func (col *Collection) Chunk(size int, handler func(collection contracts.Collect
 	return
 }
 
-func (col *Collection) Random(size ...uint) contracts.Collection {
+func (col *Collection[T]) Random(size ...uint) contracts.Collection[T] {
 	num := 1
 	if len(size) > 0 {
 		num = int(size[0])
 	}
-	newCollection := &Collection{}
+	newCollection := &Collection[T]{}
 	if col.Count() >= num {
 		for _, index := range utils.RandIntArray(0, col.Count()-1, num) {
 			newCollection.array = append(newCollection.array, col.array[index])
-			if len(col.mapData) > 0 {
-				newCollection.mapData = append(newCollection.mapData, col.mapData[index])
-			}
 		}
 	}
 	return newCollection
