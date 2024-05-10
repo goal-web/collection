@@ -45,18 +45,20 @@ func (col *Collection[T]) Only(keys ...string) contracts.Collection[T] {
 	return New(rawResults)
 }
 
-func (col *Collection[T]) First() *T {
+func (col *Collection[T]) First() (T, bool) {
+	var result T
 	if col.Count() == 0 {
-		return nil
+		return result, false
 	}
-	return &col.array[0]
+	return col.array[0], true
 }
 
-func (col *Collection[T]) Last() *T {
+func (col *Collection[T]) Last() (T, bool) {
+	var result T
 	if col.Count() == 0 {
-		return nil
+		return result, false
 	}
-	return &col.array[len(col.array)-1]
+	return col.array[len(col.array)-1], true
 }
 
 func (col *Collection[T]) Prepend(items ...T) contracts.Collection[T] {
@@ -67,26 +69,28 @@ func (col *Collection[T]) Push(items ...T) contracts.Collection[T] {
 	return New(append(col.array, items...))
 }
 
-func (col *Collection[T]) Pull(defaultValue ...T) *T {
-	if result := col.Last(); result != nil {
+func (col *Collection[T]) Pull(defaultValue ...T) (T, bool) {
+	result, exists := col.Last()
+	if exists {
 		col.array = col.array[:col.Count()-1]
-		return result
+		return result, true
 	} else if len(defaultValue) > 0 {
-		return &defaultValue[0]
+		return defaultValue[0], true
 	}
 
-	return nil
+	return result, false
 }
 
-func (col *Collection[T]) Shift(defaultValue ...T) *T {
-	if result := col.First(); result != nil {
+func (col *Collection[T]) Shift(defaultValue ...T) (T, bool) {
+	result, exists := col.First()
+	if exists {
 		col.array = col.array[1:]
-		return result
+		return result, true
 	} else if len(defaultValue) > 0 {
-		return &defaultValue[0]
+		return defaultValue[0], true
 	}
 
-	return nil
+	return result, false
 }
 
 func (col *Collection[T]) Offset(index int, item T) contracts.Collection[T] {
