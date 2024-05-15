@@ -72,8 +72,9 @@ func TestToJson(t *testing.T) {
 		{id: 2, Name: "goal", Money: 2},
 		{id: 3, Name: "collection", Money: 0},
 	})
+	first, _ := users.First()
 	anyArray := collection.New([]any{
-		"1", 2, 3.0, true, users.First(), users,
+		"1", 2, 3.0, true, first, users,
 	})
 
 	fmt.Println(users.ToJson())
@@ -81,7 +82,6 @@ func TestToJson(t *testing.T) {
 }
 
 func TestStructArray(t *testing.T) {
-
 	users := collection.New([]User{
 		{id: 1, Name: "qbhy"},
 		{id: 2, Name: "goal"},
@@ -96,6 +96,30 @@ func TestStructArray(t *testing.T) {
 	})
 
 	newUsers := users.Map(func(user User) User {
+		if user.id == 1 {
+			user.Money = 100
+		}
+		return user
+	}).Where("money", 100)
+	// 使用 map 修改数据后在用 where 筛选
+	assert.True(t, newUsers.Len() == 1)
+}
+
+func TestPtrStructArray(t *testing.T) {
+	users := collection.New([]*User{
+		{id: 1, Name: "qbhy"},
+		{id: 2, Name: "goal"},
+	})
+
+	users.Map(func(user *User) {
+		fmt.Printf("user: id:%d Name:%s \n", user.id, user.Name)
+	})
+	// 使用 fields 接收的时候，未导出字段默认是 nil
+	users.Map(func(user contracts.Fields) {
+		fmt.Printf("user: id:%v Name:%s \n", user["id"], user["name"])
+	})
+
+	newUsers := users.Map(func(user *User) *User {
 		if user.id == 1 {
 			user.Money = 100
 		}
@@ -237,11 +261,13 @@ func TestCombine(t *testing.T) {
 	fmt.Println(all.ToAnyArray())
 	fmt.Println(all.Only("money", "name").ToArrayFields())
 
-	assert.True(t, all.First().Name == "马云") // 最有钱还是马云
+	first, _ := all.First()
+	assert.True(t, first.Name == "马云") // 最有钱还是马云
 
+	last, _ := all.Last()
 	normalUsers := all.Where("money", ">", 100)
 	assert.True(t, normalUsers.Len() == 2)                       // 两个普通人
-	assert.True(t, normalUsers.Last().Name == "goal")            // 筛选不影响排序，跟马云比还差了点
+	assert.True(t, last.Name == "goal")                          // 筛选不影响排序，跟马云比还差了点
 	assert.False(t, normalUsers.IsEmpty())                       // 有普通人
 	assert.True(t, normalUsers.Where("money", "<", 0).IsEmpty()) // 普通人都没有负债
 
@@ -250,10 +276,12 @@ func TestCombine(t *testing.T) {
 	assert.True(t, randomUsers.Len() == 2)
 	fmt.Println(randomUsers.ToArray())
 
-	assert.True(t, all.Pull().Name == "qbhy") // 从末尾取走一个
-	assert.True(t, all.Len() == 2)            // 判断取走后的长度
-	assert.True(t, all.Shift().Name == "马云")  // 从开头取走一个
-	assert.True(t, all.Len() == 1)            // 判断取走后的长度
+	pull, _ := all.Pull()
+	assert.True(t, pull.Name == "qbhy") // 从末尾取走一个
+	assert.True(t, all.Len() == 2)      // 判断取走后的长度
+	shift, _ := all.Shift()
+	assert.True(t, shift.Name == "马云") // 从开头取走一个
+	assert.True(t, all.Len() == 1)     // 判断取走后的长度
 
 }
 
@@ -283,8 +311,10 @@ func TestChunk(t *testing.T) {
 		{id: 3, Name: "移动", Money: 10086},
 	}).Chunk(3, func(collection contracts.Collection[User], page int) error {
 		assert.True(t, page == 1)
-		assert.True(t, collection.First().Name == "qbhy")
-		assert.True(t, collection.Last().Name == "goal")
+		first, _ := collection.First()
+		last, _ := collection.Last()
+		assert.True(t, first.Name == "qbhy")
+		assert.True(t, last.Name == "goal")
 		return errors.New("第一页退出")
 	})
 
