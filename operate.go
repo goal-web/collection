@@ -119,7 +119,7 @@ func (col *Collection[T]) Merge(collections ...contracts.Collection[T]) contract
 }
 
 func (col *Collection[T]) Reverse() contracts.Collection[T] {
-	newCollection := &Collection[T]{array: append(col.array)}
+	newCollection := &Collection[T]{array: col.array}
 	for from, to := 0, len(newCollection.array)-1; from < to; from, to = from+1, to-1 {
 		newCollection.array[from], newCollection.array[to] = newCollection.array[to], newCollection.array[from]
 	}
