@@ -1,6 +1,6 @@
 module github.com/goal-web/collection
 
-go 1.20
+go 1.23.1
 
 require (
 	github.com/shopspring/decimal v1.4.0
