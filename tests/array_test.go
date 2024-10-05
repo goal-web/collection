@@ -212,7 +212,7 @@ func TestSortArray(t *testing.T) {
 
 	fmt.Println(users.ToArray())
 
-	// 暂不支持转成 contracts.Fields
+	// 暂不支持转成 contracts.ToFields
 	usersOrderByMoneyDesc := users.Sort(func(_, _ int, user, next User) bool {
 		return user.Money > next.Money
 	})

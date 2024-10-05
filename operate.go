@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"fmt"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports/utils"
 )
@@ -22,7 +23,7 @@ func (col *Collection[T]) GroupBy(key string) map[string][]T {
 	list := map[string][]T{}
 
 	for index, data := range col.ToArrayFields() {
-		var value, _ = data[key].(string)
+		var value = fmt.Sprintf("%v", data[key])
 		list[value] = append(list[value], col.array[index])
 	}
 
