@@ -9,21 +9,21 @@
 ![CI](https://img.shields.io/github/actions/workflow/status/goal-web/collection/ci.yml?branch=master&label=CI)
 ![Lint](https://img.shields.io/github/actions/workflow/status/goal-web/collection/lint.yml?branch=master&label=Lint)
 
-[Docs](https://pkg.go.dev/github.com/goal-web/collection) · [Issues](https://github.com/goal-web/collection/issues) · [Releases](https://github.com/goal-web/collection/releases) · [中文文档](./README.cn.md)
+[Docs](https://pkg.go.dev/github.com/goal-web/collection) · [Issues](https://github.com/goal-web/collection/issues) · [Releases](https://github.com/goal-web/collection/releases) · [English](./README.md)
 
-Collections and operations for arrays/maps: aggregate, filter, convert, sort.
+集合与数组/映射的常用操作：聚合、过滤、转换、排序。
 
-## Highlights
+## 亮点
 
-- Aggregate: `Sum/Avg/Max/Min/Count` and safe variants
-- Filter/Where helpers
-- Convert to arrays/fields/json
-- Sort utilities
+- 聚合：`Sum/Avg/Max/Min/Count` 以及安全变体
+- 过滤/条件辅助
+- 转换为数组/Fields/JSON
+- 排序工具
 
-## Compatibility
+## 兼容性
 
 - Go `>= 1.25.0`
-- Module path: `github.com/goal-web/collection`
+- 模块路径：`github.com/goal-web/collection`
 
 ## Star History
 
