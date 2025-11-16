@@ -1,11 +1,11 @@
 module github.com/goal-web/collection
 
-go 1.19
+go 1.25.0
 
 require (
-	github.com/goal-web/contracts v0.1.66
-	github.com/goal-web/supports v0.1.32
-	github.com/shopspring/decimal v1.3.1
+	github.com/goal-web/contracts v0.5.4
+	github.com/goal-web/supports v0.5.12
+	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.7.0
 )
 

@@ -26,7 +26,7 @@ func TestArray(t *testing.T) {
 
 	// 第二个参数是数据索引
 	intCollection.Map(func(data, index int) {
-		fmt.Println(fmt.Sprintf("第 %d 个，值：%d", index, data))
+		fmt.Printf("第 %d 个，值：%d\n", index, data)
 	})
 
 	// 第三个参数是所有数据集合
@@ -34,15 +34,15 @@ func TestArray(t *testing.T) {
 		if index == 0 {
 			fmt.Println("allData", allData)
 		}
-		fmt.Println(fmt.Sprintf("第 %d 个，值：%d", index, data))
+		fmt.Printf("第 %d 个，值：%d\n", index, data)
 	})
 
 	// 甚至可以直接转换成你想要的类型
 	intCollection.Map(func(data string, index int) {
-		fmt.Println(fmt.Sprintf("第 %d 个，值：%s", index, data))
+		fmt.Printf("第 %d 个，值：%s\n", index, data)
 	})
 	intCollection.Map(func(data bool, index int) {
-		fmt.Println(fmt.Sprintf("第 %d 个，值：%v", index, data))
+		fmt.Printf("第 %d 个，值：%v\n", index, data)
 	})
 
 	// 不返回任何值表示只遍历
@@ -61,19 +61,20 @@ func TestArray(t *testing.T) {
 }
 
 type User struct {
-	id    int     `json:"id"`
+	Id    int     `json:"Id"`
 	Name  string  `json:"name"`
 	Money float64 `json:"money"`
 }
 
 func TestToJson(t *testing.T) {
 	users := collection.New([]User{
-		{id: 1, Name: "qbhy", Money: 1},
-		{id: 2, Name: "goal", Money: 2},
-		{id: 3, Name: "collection", Money: 0},
+		{Id: 1, Name: "qbhy", Money: 1},
+		{Id: 2, Name: "goal", Money: 2},
+		{Id: 3, Name: "collection", Money: 0},
 	})
+	first, _ := users.First()
 	anyArray := collection.New([]any{
-		"1", 2, 3.0, true, users.First(), users,
+		"1", 2, 3.0, true, first, users,
 	})
 
 	fmt.Println(users.ToJson())
@@ -81,22 +82,45 @@ func TestToJson(t *testing.T) {
 }
 
 func TestStructArray(t *testing.T) {
-
 	users := collection.New([]User{
-		{id: 1, Name: "qbhy"},
-		{id: 2, Name: "goal"},
+		{Id: 1, Name: "qbhy"},
+		{Id: 2, Name: "goal"},
 	})
 
 	users.Map(func(user User) {
-		fmt.Printf("user: id:%d Name:%s \n", user.id, user.Name)
+		fmt.Printf("user: Id:%d Name:%s \n", user.Id, user.Name)
 	})
 	// 使用 fields 接收的时候，未导出字段默认是 nil
 	users.Map(func(user contracts.Fields) {
-		fmt.Printf("user: id:%v Name:%s \n", user["id"], user["name"])
+		fmt.Printf("user: Id:%v Name:%s \n", user["Id"], user["name"])
 	})
 
 	newUsers := users.Map(func(user User) User {
-		if user.id == 1 {
+		if user.Id == 1 {
+			user.Money = 100
+		}
+		return user
+	}).Where("money", 100)
+	// 使用 map 修改数据后在用 where 筛选
+	assert.True(t, newUsers.Len() == 1)
+}
+
+func TestPtrStructArray(t *testing.T) {
+	users := collection.New([]*User{
+		{Id: 1, Name: "qbhy"},
+		{Id: 2, Name: "goal"},
+	})
+
+	users.Map(func(user *User) {
+		fmt.Printf("user: Id:%d Name:%s \n", user.Id, user.Name)
+	})
+	// 使用 fields 接收的时候，未导出字段默认是 nil
+	users.Map(func(user contracts.Fields) {
+		fmt.Printf("user: Id:%v Name:%s \n", user["Id"], user["name"])
+	})
+
+	newUsers := users.Map(func(user *User) *User {
+		if user.Id == 1 {
 			user.Money = 100
 		}
 		return user
@@ -108,8 +132,8 @@ func TestStructArray(t *testing.T) {
 func TestFilterArray(t *testing.T) {
 
 	users := collection.New([]User{
-		{id: 1, Name: "qbhy", Money: 10000000},
-		{id: 2, Name: "goal", Money: 10},
+		{Id: 1, Name: "qbhy", Money: 10000000},
+		{Id: 2, Name: "goal", Money: 10},
 	})
 
 	fmt.Println("第一个数据", users.ToAnyArray()[0])
@@ -142,9 +166,9 @@ func TestFilterArray(t *testing.T) {
 func TestAggregateArray(t *testing.T) {
 
 	users := collection.New([]User{
-		{id: 1, Name: "qbhy", Money: 10000000000000000},
-		{id: 2, Name: "goal", Money: 10000000000000000},
-		{id: 3, Name: "collection", Money: 0.645624123},
+		{Id: 1, Name: "qbhy", Money: 10000000000000000},
+		{Id: 2, Name: "goal", Money: 10000000000000000},
+		{Id: 3, Name: "collection", Money: 0.645624123},
 	}).(*collection.Collection[User])
 
 	// SafeSum、SafeAvg、SafeMax、SafeMin 等方法需要 *Collection[T].Collection 类型
@@ -163,9 +187,9 @@ func TestAggregateArray(t *testing.T) {
 	assert.True(t, users.SafeMin("money").Equal(min))
 
 	users = collection.New([]User{
-		{id: 1, Name: "qbhy", Money: 1},
-		{id: 2, Name: "goal", Money: 2},
-		{id: 3, Name: "collection", Money: 0},
+		{Id: 1, Name: "qbhy", Money: 1},
+		{Id: 2, Name: "goal", Money: 2},
+		{Id: 3, Name: "collection", Money: 0},
 	}).(*collection.Collection[User])
 
 	assert.True(t, users.Sum("money") == 3)
@@ -178,17 +202,17 @@ func TestAggregateArray(t *testing.T) {
 // TestSortArray 测试排序功能
 func TestSortArray(t *testing.T) {
 	users := collection.New([]User{
-		{id: 1, Name: "qbhy", Money: 12},
-		{id: 2, Name: "goal", Money: 1},
-		{id: 2, Name: "goal", Money: 15},
-		{id: 2, Name: "goal99", Money: 99},
-		{id: 3, Name: "collection", Money: -5},
-		{id: 3, Name: "移动", Money: 10086},
+		{Id: 1, Name: "qbhy", Money: 12},
+		{Id: 2, Name: "goal", Money: 1},
+		{Id: 2, Name: "goal", Money: 15},
+		{Id: 2, Name: "goal99", Money: 99},
+		{Id: 3, Name: "collection", Money: -5},
+		{Id: 3, Name: "移动", Money: 10086},
 	})
 
 	fmt.Println(users.ToArray())
 
-	// 暂不支持转成 contracts.Fields
+	// 暂不支持转成 contracts.ToFields
 	usersOrderByMoneyDesc := users.Sort(func(_, _ int, user, next User) bool {
 		return user.Money > next.Money
 	})
@@ -215,18 +239,19 @@ func TestSortArray(t *testing.T) {
 
 // TestCombine 测试组合集合功能
 func TestCombine(t *testing.T) {
+
 	users := collection.New([]User{
-		{id: 1, Name: "qbhy", Money: 12},
+		{Id: 1, Name: "qbhy", Money: 12},
 	})
 
-	users = users.Push(User{id: 2, Name: "goal", Money: 1000})
-	//users = users.Prepend(User{id: 2, Name: "goal", Money: 1000}) // 插入到开头
+	users = users.Push(User{Id: 2, Name: "goal", Money: 1000})
+	//users = users.Prepend(User{Id: 2, Name: "goal", Money: 1000}) // 插入到开头
 
 	assert.True(t, users.Len() == 2)
 	fmt.Println(users.ToAnyArray())
 
 	others := collection.New([]User{
-		{id: 3, Name: "马云", Money: 100000000},
+		{Id: 3, Name: "马云", Money: 100000000},
 	})
 
 	all := others.Merge(users).Sort(func(_, _ int, pre, next User) bool {
@@ -234,26 +259,33 @@ func TestCombine(t *testing.T) {
 	})
 
 	assert.True(t, all.Len() == 3)
-	fmt.Println(all.ToAnyArray())
+	fmt.Println("all users", all.ToAnyArray())
 	fmt.Println(all.Only("money", "name").ToArrayFields())
 
-	assert.True(t, all.First().Name == "马云") // 最有钱还是马云
+	first, _ := all.Sort(func(i int, i2 int, user User, user2 User) bool {
+		return user.Money > user2.Money
+	}).First()
+	assert.True(t, first.Name == "马云") // 最有钱还是马云
 
 	normalUsers := all.Where("money", ">", 100)
-	assert.True(t, normalUsers.Len() == 2)                       // 两个普通人
-	assert.True(t, normalUsers.Last().Name == "goal")            // 筛选不影响排序，跟马云比还差了点
-	assert.False(t, normalUsers.IsEmpty())                       // 有普通人
-	assert.True(t, normalUsers.Where("money", "<", 0).IsEmpty()) // 普通人都没有负债
+	fmt.Println("普通人", normalUsers.ToArray())
+	assert.True(t, normalUsers.Len() == 2) // 两个普通人
+	last, _ := normalUsers.Last()
+	assert.True(t, last.Name == "goal", fmt.Sprintf("预期 name=goal，实际=%s", last.Name)) // 筛选不影响排序，跟马云比还差了点
+	assert.False(t, normalUsers.IsEmpty())                                            // 有普通人
+	assert.True(t, normalUsers.Where("money", "<", 0).IsEmpty())                      // 普通人都没有负债
 
 	randomUsers := all.Random(2)
 	// 随机获取两个数据
 	assert.True(t, randomUsers.Len() == 2)
 	fmt.Println(randomUsers.ToArray())
 
-	assert.True(t, all.Pull().Name == "qbhy") // 从末尾取走一个
-	assert.True(t, all.Len() == 2)            // 判断取走后的长度
-	assert.True(t, all.Shift().Name == "马云")  // 从开头取走一个
-	assert.True(t, all.Len() == 1)            // 判断取走后的长度
+	pull, _ := all.Pull()
+	assert.True(t, pull.Name == "qbhy") // 从末尾取走一个
+	assert.True(t, all.Len() == 2)      // 判断取走后的长度
+	shift, _ := all.Shift()
+	assert.True(t, shift.Name == "马云") // 从开头取走一个
+	assert.True(t, all.Len() == 1)     // 判断取走后的长度
 
 }
 
@@ -275,16 +307,18 @@ func TestChunk(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = collection.New([]User{
-		{id: 1, Name: "qbhy", Money: 12},
-		{id: 2, Name: "goal", Money: 1},
-		{id: 2, Name: "goal", Money: 15},
-		{id: 2, Name: "goal99", Money: 99},
-		{id: 3, Name: "collection", Money: -5},
-		{id: 3, Name: "移动", Money: 10086},
+		{Id: 1, Name: "qbhy", Money: 12},
+		{Id: 2, Name: "goal", Money: 1},
+		{Id: 2, Name: "goal", Money: 15},
+		{Id: 2, Name: "goal99", Money: 99},
+		{Id: 3, Name: "collection", Money: -5},
+		{Id: 3, Name: "移动", Money: 10086},
 	}).Chunk(3, func(collection contracts.Collection[User], page int) error {
 		assert.True(t, page == 1)
-		assert.True(t, collection.First().Name == "qbhy")
-		assert.True(t, collection.Last().Name == "goal")
+		first, _ := collection.First()
+		last, _ := collection.Last()
+		assert.True(t, first.Name == "qbhy")
+		assert.True(t, last.Name == "goal")
 		return errors.New("第一页退出")
 	})
 

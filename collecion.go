@@ -53,6 +53,10 @@ func (col *Collection[T]) Map(handler any) contracts.Collection[T] {
 		for i, data := range col.array {
 			handle(i, data)
 		}
+	case func(i int, fields *T):
+		for i, data := range col.array {
+			handle(i, &data)
+		}
 	case func(T) bool:
 		results := make([]T, 0)
 		for _, data := range col.array {

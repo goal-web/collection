@@ -1,0 +1,38 @@
+name: Bug report
+description: 报告一个问题或异常行为
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      placeholder: 请描述遇到的问题及影响
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 组件版本
+      placeholder: 例如 v1.0.0 或 commit hash
+  - type: input
+    id: go
+    attributes:
+      label: Go 版本
+      placeholder: 例如 1.25.0
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: 详细的复现步骤或最小示例代码
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志/堆栈
