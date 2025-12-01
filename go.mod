@@ -3,7 +3,7 @@ module github.com/goal-web/collection
 go 1.25.0
 
 require (
-	github.com/goal-web/contracts v0.5.4
+	github.com/goal-web/contracts v0.5.5
 	github.com/goal-web/supports v0.5.12
 	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.11.1
